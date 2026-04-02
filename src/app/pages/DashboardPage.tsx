@@ -6,51 +6,80 @@ const months = [
   'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
 ];
 
-// Function to calculate ISO week number
-const getWeekNumber = (date: Date): number => {
+// ISO 8601 - vraca ISO broj nedelje za dati datum
+const getISOWeek = (date: Date): number => {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  // Pomeri na cetvrtak iste nedelje (ISO: nedelja pocinje ponedeljkom)
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 };
 
-// Function to get Monday of a given date
-const getMonday = (date: Date): Date => {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
+// Vraca ponedeljak za datu nedelju koja sadrzi cetrvrtak te nedelje
+const getMondayOfISOWeek = (isoWeek: number, isoYear: number): Date => {
+  // 4. januar je uvek u prvoj ISO nedelji
+  const jan4 = new Date(Date.UTC(isoYear, 0, 4));
+  const jan4DayOfWeek = jan4.getUTCDay() || 7; // 1=Mon, 7=Sun
+  // Ponedeljak prve ISO nedelje
+  const firstMonday = new Date(jan4);
+  firstMonday.setUTCDate(jan4.getUTCDate() - (jan4DayOfWeek - 1));
+  // Dodaj (isoWeek - 1) * 7 dana
+  const result = new Date(firstMonday);
+  result.setUTCDate(firstMonday.getUTCDate() + (isoWeek - 1) * 7);
+  return result;
 };
 
-// Function to get all weeks in a month
+// ISO godina za dati datum (moze biti razlicita od kalendarske)
+const getISOYear = (date: Date): number => {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  return d.getUTCFullYear();
+};
+
+// Vraca sve ISO nedelje koje pripadaju datom mesecu
+// Nedelja pripada mesecu ako ima VISE OD 3 dana (>=4) u tom mesecu
 export const getWeeksInMonth = (year: number, month: number) => {
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDay = new Date(year, month, 0);
-  
   const weeks = [];
-  let currentMonday = getMonday(firstDay);
   
-  while (currentMonday <= lastDay) {
-    const weekEnd = new Date(currentMonday);
-    weekEnd.setDate(weekEnd.getDate() + 6); // Saturday
+  // Prodjemo kroz sve dane meseca i skupimo unique ISO nedelje
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const seenWeeks = new Set<string>();
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month - 1, day);
+    const isoWeek = getISOWeek(date);
+    const isoYear = getISOYear(date);
+    const key = `${isoYear}-${isoWeek}`;
     
-    const weekNumber = getWeekNumber(currentMonday);
-    const label = `CW${weekNumber.toString().padStart(2, '0')}`;
-    
-    const startDate = currentMonday.toISOString().split('T')[0];
-    const endDate = weekEnd.toISOString().split('T')[0];
-    
-    weeks.push({
-      id: label,
-      label,
-      startDate,
-      endDate
-    });
-    
-    // Move to next Monday
-    currentMonday = new Date(currentMonday);
-    currentMonday.setDate(currentMonday.getDate() + 7);
+    if (!seenWeeks.has(key)) {
+      seenWeeks.add(key);
+      
+      // Izracunaj ponedeljak i nedeljу te ISO nedelje
+      const monday = getMondayOfISOWeek(isoWeek, isoYear);
+      const sunday = new Date(monday);
+      sunday.setUTCDate(monday.getUTCDate() + 6);
+      
+      // Broji koliko dana te nedelje pada u ovaj mesec
+      let daysInThisMonth = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setUTCDate(monday.getUTCDate() + i);
+        if (d.getUTCMonth() + 1 === month && d.getUTCFullYear() === year) {
+          daysInThisMonth++;
+        }
+      }
+      
+      // Nedelja pripada mesecu samo ako ima vise od 3 dana u njemu
+      if (daysInThisMonth >= 4) {
+        const label = `CW${isoWeek.toString().padStart(2, '0')}`;
+        weeks.push({
+          id: label,
+          label,
+          startDate: monday.toISOString().split('T')[0],
+          endDate: sunday.toISOString().split('T')[0],
+        });
+      }
+    }
   }
   
   return weeks;

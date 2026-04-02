@@ -213,6 +213,15 @@ export function KPIDashboard({ initialMonth = 'Januar', initialWeeks = initialWe
   };
 
   // Helper function to get the date for each day of the week from the first week
+  const getWeekDayDate = (week: WeekData, dayIndex: number): string => {
+    const startDate = new Date(week.startDate);
+    const targetDate = new Date(startDate);
+    targetDate.setDate(targetDate.getDate() + dayIndex);
+    const day = targetDate.getDate().toString().padStart(2, '0');
+    const month = (targetDate.getMonth() + 1).toString().padStart(2, '0');
+    return `${day}.${month}`;
+  };
+
   const getDateForDay = (dayIndex: number): string => {
     if (weeks.length === 0) return '';
     const firstWeek = weeks[0];
@@ -269,7 +278,6 @@ export function KPIDashboard({ initialMonth = 'Januar', initialWeeks = initialWe
                   {days.map((day, idx) => (
                     <th key={day} colSpan={day !== 'Subota' ? 2 : 1} className={`p-4 text-center font-semibold text-sm ${idx < days.length - 1 ? 'border-r border-purple-500/30' : ''}`}>
                       <div>{day}</div>
-                      <div className="text-xs font-normal text-purple-200 mt-1">{getDateForDay(idx)}</div>
                     </th>
                   ))}
                   <th className="p-4 text-center font-semibold text-sm">UKUPNO</th>
@@ -335,6 +343,7 @@ export function KPIDashboard({ initialMonth = 'Januar', initialWeeks = initialWe
                       if (day !== 'Subota') {
                         return [
                           <td key={`${day}-location`} className="border-r border-teal-200 p-2 bg-white/50 min-w-[180px]">
+                            <div className="text-xs text-gray-400 text-center mb-1">{getWeekDayDate(week, days.indexOf(day))}</div>
                             <div className="space-y-2">
                               <div className="flex items-start gap-1.5">
                                 <MapPin className="w-3.5 h-3.5 text-teal-600 flex-shrink-0 mt-1" />
@@ -420,6 +429,7 @@ export function KPIDashboard({ initialMonth = 'Januar', initialWeeks = initialWe
                       if (day !== 'Subota') {
                         return [
                           <td key={`${day}-location`} className="border-r border-orange-200 p-2 bg-white/50 min-w-[180px]">
+                            <div className="text-xs text-gray-400 text-center mb-1">{getWeekDayDate(week, days.indexOf(day))}</div>
                             <div className="space-y-2">
                               <div className="flex items-start gap-1.5">
                                 <MapPin className="w-3.5 h-3.5 text-orange-600 flex-shrink-0 mt-1" />
