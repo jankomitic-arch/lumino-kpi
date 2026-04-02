@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MapPin, Zap, Calendar, TrendingUp, Award, AlertCircle, Download, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toSvg } from 'html-to-image';
@@ -58,6 +58,34 @@ export function KPIDashboard({ initialMonth = 'Januar', initialWeeks = initialWe
   const [weeks, setWeeks] = useState<WeekData[]>(initialWeeks);
   const [panonijaData, setPanonijaData] = useState<TeamWeekData>({});
   const [sumadijaData, setSumadijaData] = useState<TeamWeekData>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!year || !month) { setLoading(false); return; }
+    setLoading(true);
+    fetch('/api/kpi?year=' + year + '&month=' + month)
+      .then(r => r.json())
+      .then(data => {
+        if (data.panonija) setPanonijaData(data.panonija);
+        if (data.sumadija) setSumadijaData(data.sumadija);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [year, month]);
+
+  const saveToDB = useCallback(async (team, weekId, day, entry) => {
+    if (!year || !month) return;
+    setSaving(true);
+    try {
+      await fetch('/api/kpi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, month, team, weekId, day, location: entry.location, power: entry.power, points: parseFloat(entry.points) || 0 })
+      });
+    } catch(e) { console.error(e); }
+    finally { setSaving(false); }
+  }, [year, month]);
 
   const updateWeekDates = (weekId: string, newDates: string) => {
     setWeeks(weeks.map(w => w.id === weekId ? { ...w, dates: newDates } : w));
