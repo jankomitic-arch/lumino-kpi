@@ -126,14 +126,13 @@ export function KPIDashboard({ initialMonth = 'Januar', initialWeeks = initialWe
     const setData = team === 'panonija' ? setPanonijaData : setSumadijaData;
     setData(prev => {
       const currentDayData = prev[weekId]?.[day] || { location: '', power: '', points: '' };
+      const updated = { ...currentDayData, [field]: value };
+      saveToDB(team, weekId, day, updated);
       return {
         ...prev,
         [weekId]: {
           ...prev[weekId],
-          [day]: {
-            ...currentDayData,
-            [field]: value
-          }
+          [day]: updated
         }
       };
     });
