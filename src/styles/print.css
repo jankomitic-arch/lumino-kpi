@@ -1,0 +1,109 @@
+/* Print Styles for KPI Dashboard Export */
+@media print {
+  /* Hide interactive elements */
+  button,
+  select,
+  input[type="date"] {
+    display: none !important;
+  }
+
+  /* Show input values as text */
+  input[type="text"],
+  input[type="number"] {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    font-weight: 600 !important;
+  }
+
+  /* Optimize page layout */
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Remove page breaks inside tables */
+  table {
+    page-break-inside: avoid !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure colors are preserved */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* A4 Landscape with minimal margins for better fit */
+  @page {
+    size: A4 landscape;
+    margin: 0.5cm;
+  }
+
+  /* Hide scrollbars */
+  ::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Scale everything to fit properly */
+  #dashboard {
+    transform: scale(0.85) !important;
+    transform-origin: top left !important;
+    width: 117.6% !important;
+  }
+
+  /* Compact spacing for print */
+  .p-8 {
+    padding: 5px !important;
+  }
+
+  /* Compact table cells */
+  table td,
+  table th {
+    padding: 2px !important;
+    font-size: 9px !important;
+  }
+
+  /* Smaller legends */
+  .bg-white.rounded-xl {
+    padding: 8px !important;
+  }
+
+  /* Remove shadows and effects that don't print well */
+  .shadow-lg,
+  .shadow-md,
+  .shadow-sm {
+    box-shadow: none !important;
+  }
+
+  /* Ensure full width usage */
+  .max-w-\[1600px\] {
+    max-width: 100% !important;
+  }
+
+  /* Compact header */
+  h1 {
+    font-size: 18px !important;
+    margin-bottom: 5px !important;
+  }
+
+  /* Make table fit better */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  /* Compact inputs */
+  input {
+    font-size: 8px !important;
+  }
+
+  /* Hide back button and controls */
+  .mb-8 {
+    display: none !important;
+  }
+}
